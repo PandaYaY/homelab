@@ -1,0 +1,13 @@
+services:
+  findair:
+    build:
+      context: https://github.com/PandaYaY/FindAir.git#master
+    image: findair:latest
+    container_name: findair
+    restart: unless-stopped
+    env_file: ./find-air.env
+    environment:
+      TZ: ${TZ:-Europe/Moscow}
+      DB_PATH: /app/data/findair.db
+    volumes:
+      - ./data:/app/data
