@@ -16,7 +16,6 @@ systemd-сервис, не в Docker.
 
 Не в репозитории и не должны там быть:
 
-- `/etc/nginx/.htpasswd` — basic auth для `/admin` vaultwarden;
 - `/etc/letsencrypt/` — сертификаты и ключи, ими управляет certbot.
 
 ## Сайты
@@ -24,8 +23,8 @@ systemd-сервис, не в Docker.
 - **default** — заглушка на 80 порту для запросов без известного `Host`,
   отдаёт `/var/www/html`.
 - **vaultwarden.nyaners.ru.conf** — прокси на `127.0.0.1:8080` с поддержкой
-  websocket. 80 редиректит на 443. `/admin` доступен либо из
-  `127.0.0.1` и `192.168.1.0/24`, либо по basic auth.
+  websocket. 80 редиректит на 443. `/admin` доступен только из
+  `127.0.0.1` и `192.168.1.0/24`, снаружи nginx отвечает 403.
 
 ## TLS
 

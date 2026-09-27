@@ -1,0 +1,18 @@
+# Откуда брать конфиги
+nginx_src_dir: "{{ homelab_services_dir }}/network/nginx"
+
+# Сайты из services/network/nginx/sites-available, которые нужно
+# разложить на сервер и включить
+nginx_sites:
+  - default
+  - vaultwarden.nyaners.ru.conf
+
+# Сайты, которые нужно удалить с сервера вместе с симлинками.
+# Сюда попадает сайт при переименовании или удалении сервиса.
+nginx_sites_absent: []
+
+# Прочие файлы в /etc/nginx, которых не должно быть на сервере
+nginx_files_absent:
+  # basic auth для /admin vaultwarden больше не используется,
+  # админка доступна только из локальной сети
+  - /etc/nginx/.htpasswd

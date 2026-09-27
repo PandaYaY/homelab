@@ -1,0 +1,59 @@
+- name: Nginx установлен
+  ansible.builtin.apt:
+    name: nginx
+    state: present
+    update_cache: true
+    cache_valid_time: 86400
+
+- name: Основной конфиг nginx.conf
+  ansible.builtin.copy:
+    src: "{{ nginx_src_dir }}/nginx.conf"
+    dest: /etc/nginx/nginx.conf
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Проверить и перечитать nginx
+
+- name: Лишние файлы nginx удалены
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: absent
+  loop: "{{ nginx_files_absent }}"
+
+- name: Устаревшие сайты выключены
+  ansible.builtin.file:
+    path: "/etc/nginx/sites-enabled/{{ item }}"
+    state: absent
+  loop: "{{ nginx_sites_absent }}"
+  notify: Проверить и перечитать nginx
+
+- name: Устаревшие сайты удалены
+  ansible.builtin.file:
+    path: "/etc/nginx/sites-available/{{ item }}"
+    state: absent
+  loop: "{{ nginx_sites_absent }}"
+  notify: Проверить и перечитать nginx
+
+- name: Конфиги сайтов
+  ansible.builtin.copy:
+    src: "{{ nginx_src_dir }}/sites-available/{{ item }}"
+    dest: "/etc/nginx/sites-available/{{ item }}"
+    owner: root
+    group: root
+    mode: "0644"
+  loop: "{{ nginx_sites }}"
+  notify: Проверить и перечитать nginx
+
+- name: Сайты включены
+  ansible.builtin.file:
+    src: "/etc/nginx/sites-available/{{ item }}"
+    dest: "/etc/nginx/sites-enabled/{{ item }}"
+    state: link
+  loop: "{{ nginx_sites }}"
+  notify: Проверить и перечитать nginx
+
+- name: Nginx запущен и включён при загрузке
+  ansible.builtin.systemd_service:
+    name: nginx
+    state: started
+    enabled: true

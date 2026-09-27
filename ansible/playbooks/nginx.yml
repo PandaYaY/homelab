@@ -1,0 +1,5 @@
+- name: Nginx
+  hosts: homelab
+  become: true
+  roles:
+    - nginx
