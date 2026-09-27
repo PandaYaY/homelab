@@ -1,0 +1,56 @@
+- name: "{{ app.name }}: пути"
+  ansible.builtin.set_fact:
+    app_dir: "{{ apps_base_dir }}/{{ app.name }}"
+    app_src: "{{ homelab_services_dir }}/apps/{{ app.name }}"
+
+- name: "{{ app.name }}: каталог приложения"
+  ansible.builtin.file:
+    path: "{{ app_dir }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0750"
+
+# Пустой data означает пустое хранилище у vaultwarden и пустую базу у бота.
+# Данные появляются только через восстановление из бэкапа,
+# роль сама их никогда не создаёт.
+- name: "{{ app.name }}: проверить каталог данных"
+  ansible.builtin.stat:
+    path: "{{ app_dir }}/data"
+  register: app_data
+
+- name: "{{ app.name }}: данные на месте"
+  ansible.builtin.assert:
+    that:
+      - app_data.stat.exists
+      - app_data.stat.isdir
+    fail_msg: >-
+      Нет каталога {{ app_dir }}/data. Восстанови данные из бэкапа,
+      пустой каталог роль не создаёт.
+    quiet: true
+
+- name: "{{ app.name }}: docker-compose.yaml"
+  ansible.builtin.copy:
+    src: "{{ app_src }}/docker-compose.yaml"
+    dest: "{{ app_dir }}/docker-compose.yaml"
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: "{{ app.name }}: env с секретами"
+  ansible.builtin.template:
+    src: "{{ app_src }}/templates/{{ app.env_template }}"
+    dest: "{{ app_dir }}/{{ app.env_file }}"
+    owner: root
+    group: root
+    mode: "0600"
+
+# Compose сам пересоздаёт контейнер, если изменились compose или env.
+# Образ из исходников собирается, только если его ещё нет, или по app_rebuild.
+# Готовый образ скачивается, только если его нет локально.
+- name: "{{ app.name }}: запущен"
+  community.docker.docker_compose_v2:
+    project_src: "{{ app_dir }}"
+    state: present
+    build: "{{ 'always' if app_rebuild | bool else 'policy' }}"
+    pull: "{{ 'never' if app.build | default(false) else 'missing' }}"

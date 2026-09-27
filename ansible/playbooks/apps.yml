@@ -1,0 +1,13 @@
+# Все приложения или одно: -e app_filter=vaultwarden
+- name: Приложения
+  hosts: homelab
+  become: true
+  tasks:
+    - name: Приложение
+      ansible.builtin.include_role:
+        name: compose_app
+      loop: "{{ apps }}"
+      loop_control:
+        loop_var: app
+        label: "{{ app.name }}"
+      when: app_filter is not defined or app.name == app_filter

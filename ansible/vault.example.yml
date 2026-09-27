@@ -7,7 +7,7 @@
 ansible_become_password: "пароль sudo пользователя nyaners"
 
 # argon2-хеш, как в текущем vaultwarden.env на сервере, в одинарных кавычках
-vault_vaultwarden_admin_token: '$argon2id$v=19$...'
+vault_vaultwarden_admin_token: "$argon2id$v=19$..."
 
 vault_find_air_bot_token: "123456:ABC-DEF"
 vault_find_air_tp_token: "токен Travelpayouts"

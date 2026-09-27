@@ -5,10 +5,10 @@ systemd-сервис, не в Docker.
 
 ## Файлы
 
-| В репозитории | На сервере |
-|---|---|
-| `nginx.conf` | `/etc/nginx/nginx.conf` |
-| `sites-available/default` | `/etc/nginx/sites-available/default` |
+| В репозитории                                 | На сервере                                               |
+| --------------------------------------------- | -------------------------------------------------------- |
+| `nginx.conf`                                  | `/etc/nginx/nginx.conf`                                  |
+| `sites-available/default`                     | `/etc/nginx/sites-available/default`                     |
 | `sites-available/vaultwarden.nyaners.ru.conf` | `/etc/nginx/sites-available/vaultwarden.nyaners.ru.conf` |
 
 В `/etc/nginx/sites-enabled/` лежат симлинки на оба сайта. `conf.d/` и

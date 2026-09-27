@@ -6,13 +6,13 @@
 
 ## Сервер
 
-| Параметр | Значение |
-|---|---|
-| Хост | `orangepizero3` |
-| Железо | Orange Pi Zero3, Allwinner H618, ARM64 |
-| ОС | Armbian (на базе Debian: apt, systemd) |
-| Пользователь SSH | `nyaners` |
-| LAN | `192.168.1.0/24`, статический адрес `192.168.1.226` |
+| Параметр         | Значение                                            |
+| ---------------- | --------------------------------------------------- |
+| Хост             | `orangepizero3`                                     |
+| Железо           | Orange Pi Zero3, Allwinner H618, ARM64              |
+| ОС               | Armbian (на базе Debian: apt, systemd)              |
+| Пользователь SSH | `nyaners`                                           |
+| LAN              | `192.168.1.0/24`, статический адрес `192.168.1.226` |
 
 ## Схема
 
@@ -38,11 +38,11 @@ orangepizero3 (192.168.1.226)
 
 ## Сервисы
 
-| Сервис | Где работает | Порт на сервере | Домен | Конфиг и описание |
-|---|---|---|---|---|
-| nginx | systemd | 80, 443 | vaultwarden.nyaners.ru | [services/network/nginx](services/network/nginx/README.md) |
-| vaultwarden | Docker | 127.0.0.1:8080 | vaultwarden.nyaners.ru | [services/apps/vaultwarden](services/apps/vaultwarden/README.md) |
-| find-air | Docker | нет | нет | [services/apps/find-air](services/apps/find-air/README.md) |
+| Сервис      | Где работает | Порт на сервере | Домен                  | Конфиг и описание                                                |
+| ----------- | ------------ | --------------- | ---------------------- | ---------------------------------------------------------------- |
+| nginx       | systemd      | 80, 443         | vaultwarden.nyaners.ru | [services/network/nginx](services/network/nginx/README.md)       |
+| vaultwarden | Docker       | 127.0.0.1:8080  | vaultwarden.nyaners.ru | [services/apps/vaultwarden](services/apps/vaultwarden/README.md) |
+| find-air    | Docker       | нет             | нет                    | [services/apps/find-air](services/apps/find-air/README.md)       |
 
 Кроме них на сервере слушают `sshd` (22), `systemd-resolved` (53, только
 localhost), а также `rpcbind` (111) и `cupsd` (631), которые не нужны и
@@ -63,8 +63,7 @@ ansible/              Ansible, см. ansible/README.md
 ## Соглашения
 
 - Сервисы на сервере живут в `/opt/<сервис>`: там compose, отрендеренный
-  env и каталог `data`. Сейчас они ещё в домашнем каталоге, перенос на
-  этапе 4.
+  env и каталог `data`.
 - Секреты в git не попадают. Файлы `*.env` игнорируются, вместо них лежат
   шаблоны `templates/*.env.j2` с переменными Jinja, значения хранятся в
   Ansible Vault.
@@ -79,6 +78,7 @@ ansible/              Ansible, см. ansible/README.md
 1. Инвентаризация. Сделано.
 2. Перенос конфигов в репозиторий. Сделано.
 3. Документация. Сделано.
-4. Ansible: inventory, роли, раскладка конфигов из `services/`. В работе.
+4. Ansible: inventory, роли, раскладка конфигов из `services/`. Сделано.
 5. Бэкапы (в первую очередь данные vaultwarden), TLS, hardening, установка
    Docker через Ansible.
+6. Логи - поднять сервис для сбора логов

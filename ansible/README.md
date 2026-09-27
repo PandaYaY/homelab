@@ -15,9 +15,18 @@ inventory/
     vault.yml                   секреты, зашифрованы Ansible Vault
 vault.example.yml               какие ключи должны быть в vault.yml
 vault-pass.sh                   отдаёт Ansible пароль от Vault из .ansible-vault-pass
+playbooks/
+  site.yml                      всё целиком
+  nginx.yml                     роль nginx
+  apps.yml                      роль compose_app для каждого приложения из apps
+roles/
+  nginx/                        конфиги nginx, сайты, nginx -t и reload
+  compose_app/                  /opt/<app>: compose, env из шаблона, up
 ```
 
-Роли и playbook появятся на следующих шагах.
+Приложения перечислены в `apps` в `inventory/group_vars/all/vars.yml`.
+Роль `compose_app` никогда не создаёт каталог `data` сама и падает, если
+его нет: пустой каталог у vaultwarden означает пустое хранилище.
 
 ## Подготовка WSL, один раз
 
@@ -74,4 +83,12 @@ ansible homelab -m ping
 любой файл выглядит исполняемым, и Ansible пытается запустить его как
 скрипт. Поэтому между ними стоит `vault-pass.sh`.
 
-Любое изменение на сервере сначала прогоняется с `--check --diff`.
+Любое изменение на сервере сначала прогоняется с `--check --diff`:
+
+```sh
+ansible-playbook playbooks/site.yml --check --diff
+ansible-playbook playbooks/site.yml --diff
+```
+
+Одно приложение: `-e app_filter=vaultwarden`. Пересобрать образ из
+исходников: `-e app_rebuild=true`.

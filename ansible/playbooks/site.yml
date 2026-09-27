@@ -1,2 +1,3 @@
-# Всё целиком. Приложения добавятся на шаге 3.
+# Всё целиком
 - import_playbook: nginx.yml
+- import_playbook: apps.yml

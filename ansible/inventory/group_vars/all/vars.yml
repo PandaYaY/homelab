@@ -13,3 +13,17 @@ vaultwarden_admin_token: "{{ vault_vaultwarden_admin_token }}"
 find_air_bot_token: "{{ vault_find_air_bot_token }}"
 find_air_tp_token: "{{ vault_find_air_tp_token }}"
 find_air_allowed_user_ids: "{{ vault_find_air_allowed_user_ids }}"
+
+# Приложения в Docker Compose. Каждое живёт в {{ apps_base_dir }}/<name>,
+# конфиги берутся из services/apps/<name>.
+#   env_template  шаблон из services/apps/<name>/templates
+#   env_file      имя отрендеренного файла рядом с compose
+#   build         образ собирается из исходников, а не скачивается
+apps:
+  - name: find-air
+    env_template: find-air.env.j2
+    env_file: find-air.env
+    build: true
+  - name: vaultwarden
+    env_template: vaultwarden.env.j2
+    env_file: vaultwarden.env
