@@ -11,7 +11,8 @@ Telegram-бот, который следит за ценами на авиаби
   контекст сборки задан в `docker-compose.yaml`.
 - Портов не публикует: бот сам ходит в Telegram API и Travelpayouts.
   nginx ему не нужен.
-- База SQLite в `./data` рядом с compose.
+- База SQLite в `./data` рядом с compose. Путь к ней внутри контейнера
+  задан в `docker-compose.yaml` через `DB_PATH`, в env его нет.
 
 ## Файлы
 

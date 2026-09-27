@@ -20,11 +20,11 @@
     state: absent
   loop: "{{ nginx_files_absent }}"
 
-- name: Устаревшие сайты выключены
+- name: Устаревшие и выключенные сайты убраны из sites-enabled
   ansible.builtin.file:
     path: "/etc/nginx/sites-enabled/{{ item }}"
     state: absent
-  loop: "{{ nginx_sites_absent }}"
+  loop: "{{ nginx_sites_absent + nginx_sites_disabled }}"
   notify: Проверить и перечитать nginx
 
 - name: Устаревшие сайты удалены
@@ -44,11 +44,14 @@
   loop: "{{ nginx_sites }}"
   notify: Проверить и перечитать nginx
 
+# В режиме --check новый сайт ещё не скопирован, и без force модуль падает
+# на отсутствующем файле. В обычном режиме force не нужен.
 - name: Сайты включены
   ansible.builtin.file:
     src: "/etc/nginx/sites-available/{{ item }}"
     dest: "/etc/nginx/sites-enabled/{{ item }}"
     state: link
+    force: "{{ ansible_check_mode }}"
   loop: "{{ nginx_sites }}"
   notify: Проверить и перечитать nginx
 

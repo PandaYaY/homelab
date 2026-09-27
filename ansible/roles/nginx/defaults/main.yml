@@ -4,10 +4,18 @@ nginx_src_dir: "{{ homelab_services_dir }}/network/nginx"
 # Сайты из services/network/nginx/sites-available, которые нужно
 # разложить на сервер и включить
 nginx_sites:
-  - default
+  - 00-default.conf
   - vaultwarden.nyaners.ru.conf
 
-# Сайты, которые нужно удалить с сервера вместе с симлинками.
+# Сайты, которые нужно выключить, но не удалять: убирается только симлинк
+# из sites-enabled, файл в sites-available остаётся как есть.
+# Штатный default принадлежит пакету nginx, его не правим и не удаляем,
+# но включённым его оставить нельзя: его default_server на порту 80
+# конфликтует с 00-default.conf.
+nginx_sites_disabled:
+  - default
+
+# Сайты, которые нужно удалить с сервера совсем, вместе с симлинками.
 # Сюда попадает сайт при переименовании или удалении сервиса.
 nginx_sites_absent: []
 
