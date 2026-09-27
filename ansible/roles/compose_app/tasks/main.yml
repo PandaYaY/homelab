@@ -37,7 +37,9 @@
     group: root
     mode: "0644"
 
+# diff: false, иначе --diff напечатает токены открытым текстом
 - name: "{{ app.name }}: env с секретами"
+  diff: false
   ansible.builtin.template:
     src: "{{ app_src }}/templates/{{ app.env_template }}"
     dest: "{{ app_dir }}/{{ app.env_file }}"

@@ -131,3 +131,6 @@ ansible/              Ansible, см. ansible/README.md
 5. Бэкапы на сервере, TLS, защита сервера, Docker через Ansible. Сделано.
    Не сделано: копия бэкапов вне сервера, в Google Диск.
 6. Логи - поднять сервис для сбора логов
+
+## Notes
+Разобраться с сертификатами на уровне конфигурации [nginx](./services/network/nginx/sites-available/vaultwarden.nyaners.ru.conf#L51-L56)
