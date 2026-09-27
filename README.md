@@ -54,7 +54,7 @@ localhost), а также `rpcbind` (111) и `cupsd` (631), которые не 
 services/
   network/nginx/      конфиги nginx, копия /etc/nginx
   apps/<сервис>/      docker-compose.yaml и templates/ с шаблонами env
-ansible/              появится на этапе 4
+ansible/              Ansible, см. ansible/README.md
 ```
 
 Каждый сервис описан в своём README рядом с конфигами. Удаляешь сервис,
@@ -78,7 +78,7 @@ ansible/              появится на этапе 4
 
 1. Инвентаризация. Сделано.
 2. Перенос конфигов в репозиторий. Сделано.
-3. Документация. В работе.
-4. Ansible: inventory, роли, раскладка конфигов из `services/`.
+3. Документация. Сделано.
+4. Ansible: inventory, роли, раскладка конфигов из `services/`. В работе.
 5. Бэкапы (в первую очередь данные vaultwarden), TLS, hardening, установка
    Docker через Ansible.

@@ -1,0 +1,14 @@
+# Образец для inventory/group_vars/all/vault.yml. Сам vault.yml хранится в репозитории
+# только в зашифрованном виде. Создать его:
+#   ansible-vault create inventory/group_vars/all/vault.yml
+# и вставить эти ключи с настоящими значениями.
+
+# Пароль sudo. Ansible читает эту переменную напрямую, без ссылки из vars.yml
+ansible_become_password: "пароль sudo пользователя nyaners"
+
+# argon2-хеш, как в текущем vaultwarden.env на сервере, в одинарных кавычках
+vault_vaultwarden_admin_token: '$argon2id$v=19$...'
+
+vault_find_air_bot_token: "123456:ABC-DEF"
+vault_find_air_tp_token: "токен Travelpayouts"
+vault_find_air_allowed_user_ids: "111111111,222222222"

@@ -1,0 +1,15 @@
+# Корень репозитория homelab: роли берут конфиги из services/
+homelab_repo_root: "{{ inventory_dir }}/../.."
+homelab_services_dir: "{{ homelab_repo_root }}/services"
+
+# Каталог, в котором живут приложения на сервере
+apps_base_dir: /opt
+
+# Пароль sudo задан в vault.yml как ansible_become_password
+
+# Секреты приложений. Значения лежат в vault.yml, здесь только ссылки,
+# чтобы по открытому файлу было видно, какие переменные существуют.
+vaultwarden_admin_token: "{{ vault_vaultwarden_admin_token }}"
+find_air_bot_token: "{{ vault_find_air_bot_token }}"
+find_air_tp_token: "{{ vault_find_air_tp_token }}"
+find_air_allowed_user_ids: "{{ vault_find_air_allowed_user_ids }}"

@@ -1,2 +1,5 @@
 .env
 *.env
+
+# Пароль от Ansible Vault никогда не коммитим
+.*vault-pass

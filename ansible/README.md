@@ -1,0 +1,77 @@
+# ansible
+
+Применяет конфиги из `services/` на сервер. Запускается из WSL (Ubuntu 24.04)
+на ПК.
+
+## Структура
+
+```
+ansible.cfg                     настройки, inventory по умолчанию
+requirements.yml                коллекции: community.docker
+inventory/
+  hosts.yml                     сервер orangepizero3
+  group_vars/all/
+    vars.yml                    открытые переменные и ссылки на секреты
+    vault.yml                   секреты, зашифрованы Ansible Vault
+vault.example.yml               какие ключи должны быть в vault.yml
+vault-pass.sh                   отдаёт Ansible пароль от Vault из .ansible-vault-pass
+```
+
+Роли и playbook появятся на следующих шагах.
+
+## Подготовка WSL, один раз
+
+**Конфиг.** Репозиторий лежит на `/mnt/d`, а этот каталог доступен на запись
+всем. Ansible в таком каталоге игнорирует `ansible.cfg`, поэтому путь к нему
+задаётся явно:
+
+```sh
+echo 'export ANSIBLE_CONFIG=/mnt/d/my_projects/homelab/ansible/ansible.cfg' >> ~/.bashrc
+```
+
+**SSH-ключ.** Ключ для сервера лежит в Windows, в WSL его нет. С `/mnt/c`
+ssh ключ не примет из-за прав доступа, поэтому его нужно скопировать:
+
+```sh
+mkdir -p ~/.ssh && chmod 700 ~/.ssh
+cp /mnt/c/Users/artem/.ssh/id_ed25519 ~/.ssh/
+chmod 600 ~/.ssh/id_ed25519
+ssh-keyscan 192.168.1.226 >> ~/.ssh/known_hosts
+```
+
+**Коллекции.**
+
+```sh
+ansible-galaxy collection install -r requirements.yml
+```
+
+**Vault.** Секреты хранятся в `inventory/group_vars/all/vault.yml` в
+зашифрованном виде, файл коммитится. Пароль от него в репозиторий не
+попадает никогда. Он хранится в файле `ansible/.ansible-vault-pass`,
+файл игнорируется git.
+
+```sh
+ansible-vault create inventory/group_vars/all/vault.yml
+```
+
+Ключи взять из `vault.example.yml`. Редактировать потом:
+
+```sh
+ansible-vault edit inventory/group_vars/all/vault.yml
+```
+
+## Запуск
+
+Пароль от Vault Ansible берёт сам через `vault-pass.sh`, указывать его не
+нужно:
+
+```sh
+cd /mnt/d/my_projects/homelab/ansible
+ansible homelab -m ping
+```
+
+Напрямую `.ansible-vault-pass` в `vault_password_file` указать нельзя. На `/mnt/d`
+любой файл выглядит исполняемым, и Ansible пытается запустить его как
+скрипт. Поэтому между ними стоит `vault-pass.sh`.
+
+Любое изменение на сервере сначала прогоняется с `--check --diff`.
