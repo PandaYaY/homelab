@@ -1,0 +1,5 @@
+- name: Сертификаты TLS
+  hosts: homelab
+  become: true
+  roles:
+    - tls

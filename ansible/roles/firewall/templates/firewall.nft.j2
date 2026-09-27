@@ -1,0 +1,30 @@
+#!/usr/sbin/nft -f
+# Управляется Ansible, роль firewall.
+#
+# Только своя таблица inet homelab. Здесь нет flush ruleset: он стёр бы
+# правила Docker, которые живут в других таблицах. Первые две строки
+# атомарно пересоздают таблицу, так что файл можно применять повторно.
+# Трафик контейнеров идёт через forward и этой таблицей не фильтруется.
+
+table inet homelab
+delete table inet homelab
+
+table inet homelab {
+    chain input {
+        type filter hook input priority filter; policy drop;
+
+        iif "lo" accept
+        ct state established,related accept
+        ct state invalid drop
+
+        # ping, а для IPv6 ещё и обнаружение соседей, без него сеть не работает
+        meta l4proto { icmp, ipv6-icmp } accept
+
+        # Ответы DHCP: сервер в Wi-Fi получает адрес от роутера
+        udp sport 67 udp dport 68 accept
+        ip6 saddr fe80::/10 udp sport 547 udp dport 546 accept
+
+        tcp dport { {{ firewall_tcp_public | join(', ') }} } accept
+        ip saddr {{ firewall_ssh_cidr }} tcp dport 22 accept
+    }
+}

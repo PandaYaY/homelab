@@ -1,0 +1,5 @@
+- name: Docker
+  hosts: homelab
+  become: true
+  roles:
+    - docker

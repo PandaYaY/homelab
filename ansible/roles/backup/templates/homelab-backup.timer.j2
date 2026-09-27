@@ -1,0 +1,11 @@
+# Управляется Ansible, роль backup
+[Unit]
+Description=Ежедневный бэкап данных приложений homelab
+
+[Timer]
+OnCalendar={{ backup_on_calendar }}
+RandomizedDelaySec=10min
+Persistent=true
+
+[Install]
+WantedBy=timers.target

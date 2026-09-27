@@ -1,0 +1,14 @@
+# Сначала проверка, потом reload. Если sshd -t упадёт, работающий sshd
+# останется со старым конфигом, а текущие сессии не оборвутся.
+- name: Проверить конфиг sshd
+  ansible.builtin.command: sshd -t
+  changed_when: false
+  listen: Проверить и перечитать sshd
+
+# На сервере sshd запускается через ssh.socket, но сам демон работает как
+# ssh.service, поэтому перечитывается именно он
+- name: Перечитать sshd
+  ansible.builtin.systemd_service:
+    name: ssh
+    state: reloaded
+  listen: Проверить и перечитать sshd

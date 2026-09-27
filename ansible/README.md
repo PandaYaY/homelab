@@ -16,12 +16,22 @@ inventory/
 vault.example.yml               какие ключи должны быть в vault.yml
 vault-pass.sh                   отдаёт Ansible пароль от Vault из .ansible-vault-pass
 playbooks/
-  site.yml                      всё целиком
+  site.yml                      всё целиком, в порядке зависимостей
+  docker.yml                    роль docker
+  tls.yml                       роль tls
   nginx.yml                     роль nginx
   apps.yml                      роль compose_app для каждого приложения из apps
+  backup.yml                    роль backup
+  hardening.yml                 роли ssh, services, firewall
 roles/
+  docker/                       репозиторий и пакеты Docker, daemon.json
+  tls/                          certbot, таймер продления, проверка сертификатов
   nginx/                        конфиги nginx, сайты, nginx -t и reload
   compose_app/                  /opt/<app>: compose, env из шаблона, up
+  backup/                       скрипт, служба и таймер ночного бэкапа
+  ssh/                          настройки sshd, sshd -t и reload
+  services/                     остановка и маскировка лишних служб
+  firewall/                     nftables, применение со страховкой
 ```
 
 Приложения перечислены в `apps` в `inventory/group_vars/all/vars.yml`.
@@ -91,4 +101,11 @@ ansible-playbook playbooks/site.yml --diff
 ```
 
 Одно приложение: `-e app_filter=vaultwarden`. Пересобрать образ из
-исходников: `-e app_rebuild=true`.
+исходников: `-e app_rebuild=true`. Пересоздать контейнеры, например после
+смены настроек логов Docker: `-e app_recreate=true`.
+
+**Файрвол применяется со страховкой.** Перед загрузкой новых правил ставится
+таймер, который снимет их через 5 минут. После загрузки Ansible открывает
+новое SSH-соединение. Если оно прошло, таймер отменяется. Если нет, правила
+снимаются сразу. В режиме `--check` правила не применяются, показывается
+только diff файла.

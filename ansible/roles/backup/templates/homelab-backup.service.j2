@@ -1,0 +1,10 @@
+# Управляется Ansible, роль backup
+[Unit]
+Description=Бэкап данных приложений homelab
+After=docker.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/homelab-backup
+Nice=10
+IOSchedulingClass=idle

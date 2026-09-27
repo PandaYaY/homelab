@@ -1,0 +1,33 @@
+- name: Certbot с плагином nginx
+  ansible.builtin.apt:
+    name:
+      - certbot
+      - python3-certbot-nginx
+    state: present
+    update_cache: true
+    cache_valid_time: 86400
+
+- name: Таймер продления сертификатов
+  ansible.builtin.systemd_service:
+    name: certbot.timer
+    state: started
+    enabled: true
+
+- name: Проверить сертификаты
+  ansible.builtin.stat:
+    path: "/etc/letsencrypt/live/{{ item }}/fullchain.pem"
+  loop: "{{ tls_domains }}"
+  register: tls_certs
+
+# Сертификат выпускается один раз вручную, дальше certbot продлевает сам.
+# Без сертификата nginx -t упадёт на сайте, поэтому останавливаемся до nginx.
+- name: Сертификаты на месте
+  ansible.builtin.assert:
+    that: item.stat.exists
+    fail_msg: >-
+      Нет сертификата для {{ item.item }}. Выпусти его на сервере:
+      sudo certbot certonly --nginx -d {{ item.item }}
+    quiet: true
+  loop: "{{ tls_certs.results }}"
+  loop_control:
+    label: "{{ item.item }}"

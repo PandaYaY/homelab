@@ -1,0 +1,115 @@
+- name: nftables установлен
+  ansible.builtin.apt:
+    name: nftables
+    state: present
+    update_cache: true
+    cache_valid_time: 86400
+
+# Штатный /etc/nftables.conf начинается с flush ruleset и при загрузке стёр бы
+# правила Docker. Наши правила грузит своя служба homelab-firewall.
+- name: Штатная служба nftables выключена
+  ansible.builtin.systemd_service:
+    name: nftables
+    enabled: false
+
+- name: Каталог для правил
+  ansible.builtin.file:
+    path: /etc/homelab
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Правила файрвола
+  ansible.builtin.template:
+    src: firewall.nft.j2
+    dest: /etc/homelab/firewall.nft
+    owner: root
+    group: root
+    mode: "0600"
+    validate: nft -c -f %s
+  register: firewall_rules
+
+- name: Служба файрвола
+  ansible.builtin.template:
+    src: homelab-firewall.service.j2
+    dest: /etc/systemd/system/homelab-firewall.service
+    owner: root
+    group: root
+    mode: "0644"
+  register: firewall_unit
+
+- name: Перечитать systemd
+  ansible.builtin.systemd_service:
+    daemon_reload: true
+  when: firewall_unit.changed
+
+- name: Узнать, загружены ли правила сейчас
+  ansible.builtin.command: nft list table inet homelab
+  register: firewall_loaded
+  changed_when: false
+  failed_when: false
+  check_mode: false
+
+# Новые правила применяются со страховкой. Сначала ставится таймер, который
+# через firewall_revert_minutes минут удалит таблицу. Потом правила грузятся
+# и Ansible открывает новое SSH-соединение, в обход уже открытого. Только если
+# оно прошло, таймер отменяется и служба включается при загрузке.
+- name: Применить правила со страховкой
+  when:
+    - not ansible_check_mode
+    - firewall_rules.changed or firewall_loaded.rc != 0
+  block:
+    - name: Убрать таймер отката с прошлого раза
+      ansible.builtin.command: systemctl stop homelab-firewall-revert.timer
+      changed_when: false
+      failed_when: false
+
+    - name: Таймер отката
+      ansible.builtin.command:
+        argv:
+          - systemd-run
+          - --unit=homelab-firewall-revert
+          - "--on-active={{ firewall_revert_minutes }}min"
+          - /usr/sbin/nft
+          - delete
+          - table
+          - inet
+          - homelab
+
+    - name: Загрузить правила
+      ansible.builtin.command: nft -f /etc/homelab/firewall.nft
+
+    - name: Новое SSH-соединение проходит
+      ansible.builtin.ping:
+      become: false
+      vars:
+        ansible_ssh_args: -o ControlMaster=no -o ControlPath=none -o ConnectTimeout=10
+      register: firewall_ping
+      retries: 3
+      delay: 5
+      until: firewall_ping is succeeded
+
+    - name: Отменить откат
+      ansible.builtin.command: systemctl stop homelab-firewall-revert.timer
+      changed_when: false
+
+  rescue:
+    - name: Снять правила сразу, не дожидаясь таймера
+      ansible.builtin.command: nft delete table inet homelab
+      failed_when: false
+
+    - name: Файрвол не применён
+      ansible.builtin.fail:
+        msg: >-
+          После загрузки правил не удалось открыть новое SSH-соединение.
+          Правила сняты. Если и это не сработало, их снимет таймер
+          homelab-firewall-revert через {{ firewall_revert_minutes }} минут.
+
+# В режиме --check файл службы ещё не создан, и systemd её не находит
+- name: Файрвол включён при загрузке
+  ansible.builtin.systemd_service:
+    name: homelab-firewall
+    enabled: true
+    state: started
+  ignore_errors: "{{ ansible_check_mode }}"

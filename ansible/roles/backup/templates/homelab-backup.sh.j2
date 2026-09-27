@@ -1,0 +1,67 @@
+#!/bin/bash
+# Управляется Ansible, роль backup. Ручной запуск: sudo homelab-backup
+#
+# Для каждого приложения из {{ apps_base_dir }}/<app>/data:
+#   - базы SQLite копируются онлайн через .backup, без остановки контейнера,
+#     и проверяются PRAGMA integrity_check;
+#   - остальные файлы копируются как есть, кроме исключённых каталогов;
+#   - всё упаковывается в {{ backup_dir }}/daily/<app>_<дата>.tar.gz.
+# По воскресеньям архив дополнительно кладётся в weekly/.
+# Старые архивы удаляются: daily старше {{ backup_keep_daily }} дней,
+# weekly старше {{ backup_keep_weekly }} недель.
+set -euo pipefail
+umask 077
+
+DEST={{ backup_dir }}
+DATE=$(date +%F)
+mkdir -p "$DEST/daily" "$DEST/weekly"
+
+backup_app() {
+    local app=$1
+    local sqlite=$2
+    local exclude=$3
+    local src={{ apps_base_dir }}/$app/data
+    local work
+    work=$(mktemp -d)
+
+    local tar_excludes=()
+    for db in $sqlite; do
+        tar_excludes+=("--exclude=./$db" "--exclude=./$db-wal" "--exclude=./$db-shm" "--exclude=./$db-journal")
+    done
+    for e in $exclude; do
+        tar_excludes+=("--exclude=./$e")
+    done
+
+    mkdir "$work/data"
+    tar -C "$src" "${tar_excludes[@]}" -cf - . | tar -C "$work/data" -xpf -
+
+    for db in $sqlite; do
+        sqlite3 "$src/$db" ".backup '$work/data/$db'"
+        local check
+        check=$(sqlite3 "$work/data/$db" "PRAGMA integrity_check;")
+        if [ "$check" != "ok" ]; then
+            echo "$app: копия $db не прошла проверку: $check" >&2
+            rm -rf "$work"
+            return 1
+        fi
+    done
+
+    local out="$DEST/daily/${app}_${DATE}.tar.gz"
+    tar -C "$work" -czf "$out.tmp" data
+    mv "$out.tmp" "$out"
+    rm -rf "$work"
+    if [ "$(date +%u)" = 7 ]; then
+        cp "$out" "$DEST/weekly/"
+    fi
+    echo "$app: $(du -h "$out" | cut -f1) $out"
+}
+
+failed=0
+{% for app in apps if app.backup is defined %}
+backup_app {{ app.name | quote }} {{ app.backup.sqlite | join(' ') | quote }} {{ app.backup.exclude | join(' ') | quote }} || failed=1
+{% endfor %}
+
+find "$DEST/daily" -name '*.tar.gz' -mtime +{{ backup_keep_daily - 1 }} -delete
+find "$DEST/weekly" -name '*.tar.gz' -mtime +{{ backup_keep_weekly * 7 - 1 }} -delete
+
+exit $failed

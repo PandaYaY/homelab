@@ -54,3 +54,4 @@
     state: present
     build: "{{ 'always' if app_rebuild | bool else 'policy' }}"
     pull: "{{ 'never' if app.build | default(false) else 'missing' }}"
+    recreate: "{{ 'always' if app_recreate | bool else 'auto' }}"

@@ -1,0 +1,19 @@
+- name: Какие из этих юнитов есть на сервере
+  ansible.builtin.command:
+    argv: ["systemctl", "list-unit-files", "--no-legend", "--plain", "{{ item }}"]
+  loop: "{{ services_disabled }}"
+  register: services_found
+  changed_when: false
+  failed_when: false
+  check_mode: false
+
+- name: Ненужные службы остановлены и замаскированы
+  ansible.builtin.systemd_service:
+    name: "{{ item.item }}"
+    state: stopped
+    enabled: false
+    masked: true
+  loop: "{{ services_found.results }}"
+  loop_control:
+    label: "{{ item.item }}"
+  when: item.stdout | trim | length > 0

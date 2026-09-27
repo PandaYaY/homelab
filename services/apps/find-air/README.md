@@ -39,3 +39,8 @@ ansible-playbook playbooks/apps.yml -e app_filter=find-air -e app_rebuild=true
 
 Compose заново клонирует `master` и пересобирает образ. Без
 `app_rebuild=true` образ собирается, только если его ещё нет.
+
+## Бэкап
+
+Каждую ночь, см. раздел «Бэкапы» в корневом README. В архив попадает весь
+`data`, база `findair.db` копируется онлайн через `sqlite3 .backup`.

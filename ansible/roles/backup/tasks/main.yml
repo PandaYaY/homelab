@@ -1,0 +1,45 @@
+- name: sqlite3 для онлайн-копий баз
+  ansible.builtin.apt:
+    name: sqlite3
+    state: present
+    update_cache: true
+    cache_valid_time: 86400
+
+- name: Каталог бэкапов
+  ansible.builtin.file:
+    path: "{{ backup_dir }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0700"
+
+- name: Скрипт бэкапа
+  ansible.builtin.template:
+    src: homelab-backup.sh.j2
+    dest: /usr/local/sbin/homelab-backup
+    owner: root
+    group: root
+    mode: "0750"
+
+- name: Служба и таймер бэкапа
+  ansible.builtin.template:
+    src: "{{ item }}.j2"
+    dest: "/etc/systemd/system/{{ item }}"
+    owner: root
+    group: root
+    mode: "0644"
+  loop:
+    - homelab-backup.service
+    - homelab-backup.timer
+  notify: Перечитать systemd
+
+- name: Применить изменения systemd до включения таймера
+  ansible.builtin.meta: flush_handlers
+
+# В режиме --check файл таймера ещё не создан, и systemd его не находит
+- name: Таймер бэкапа включён
+  ansible.builtin.systemd_service:
+    name: homelab-backup.timer
+    state: started
+    enabled: true
+  ignore_errors: "{{ ansible_check_mode }}"

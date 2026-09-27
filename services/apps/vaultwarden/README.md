@@ -43,6 +43,7 @@ ansible-playbook playbooks/apps.yml -e app_filter=vaultwarden --diff
 
 ## Бэкап
 
-Достаточно каталога `./data`. База SQLite, копировать на живом контейнере
-лучше через `sqlite3 data/db.sqlite3 ".backup ..."`, а не `cp`.
-Автоматизация бэкапов запланирована на этапе 5.
+Каждую ночь, см. раздел «Бэкапы» в корневом README. В архив попадает весь
+`data`, кроме `icon_cache` и `tmp`. База `db.sqlite3` копируется онлайн
+через `sqlite3 .backup`. Самое ценное в архиве: `db.sqlite3` и
+`rsa_key.pem`, без ключа сессии всех клиентов станут недействительны.

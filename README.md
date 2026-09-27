@@ -44,9 +44,58 @@ orangepizero3 (192.168.1.226)
 | vaultwarden | Docker       | 127.0.0.1:8080  | vaultwarden.nyaners.ru | [services/apps/vaultwarden](services/apps/vaultwarden/README.md) |
 | find-air    | Docker       | нет             | нет                    | [services/apps/find-air](services/apps/find-air/README.md)       |
 
-Кроме них на сервере слушают `sshd` (22), `systemd-resolved` (53, только
-localhost), а также `rpcbind` (111) и `cupsd` (631), которые не нужны и
-будут отключены на этапе hardening.
+Кроме них на сервере слушает только `sshd` (22) и `systemd-resolved` (53,
+только localhost). Сервер подключён к роутеру по Wi-Fi, адрес выдаёт DHCP
+роутера с закреплением за сервером.
+
+## Защита
+
+- **Файрвол** nftables, своя таблица `inet homelab`: снаружи открыты только
+  80 и 443, SSH только из `192.168.1.0/24`, остальное запрещено. Правила
+  Docker живут в других таблицах и не затрагиваются.
+- **SSH** только по ключу, root не пускается, X11 выключен.
+- **Лишние службы** из образа Armbian остановлены и замаскированы: rpcbind,
+  cups, avahi, bluetooth, ModemManager.
+- **Автообновления безопасности** через unattended-upgrades.
+- **Логи Docker** ротируются: по 10 МБ, 3 файла на контейнер.
+
+## Бэкапы
+
+Каждую ночь в 00:30 UTC (03:30 по Москве) таймер `homelab-backup.timer`
+собирает архив данных каждого приложения:
+
+- базы SQLite копируются онлайн через `sqlite3 .backup`, без остановки
+  контейнера, и проверяются `PRAGMA integrity_check`;
+- остальные файлы из `data` копируются как есть, кроме кэшей;
+- архивы лежат в `/var/backups/homelab/daily`, по воскресеньям копия
+  уходит в `weekly`;
+- хранятся 7 ежедневных и 4 недельных архива.
+
+> **Внимание: бэкапы пока лежат на той же SD-карте, что и система.** Они
+> спасают от ошибок, порчи базы и неудачных обновлений, но не от смерти
+> карты, кражи или пожара. Дополнительного хранилища пока нет. План:
+> отправлять архивы в Google Диск через rclone.
+
+Запустить бэкап вручную и посмотреть результат:
+
+```sh
+sudo systemctl start homelab-backup
+journalctl -u homelab-backup -n 20
+sudo ls -lh /var/backups/homelab/daily
+```
+
+Восстановить приложение из архива:
+
+```sh
+cd /opt/<app>
+sudo docker compose down
+sudo mv data data.broken
+sudo tar -xzf /var/backups/homelab/daily/<app>_<дата>.tar.gz
+sudo docker compose up -d
+```
+
+Архив содержит каталог `data` целиком, права и владельцы сохраняются.
+Когда приложение проверено, `data.broken` можно удалить.
 
 ## Структура репозитория
 
@@ -79,6 +128,6 @@ ansible/              Ansible, см. ansible/README.md
 2. Перенос конфигов в репозиторий. Сделано.
 3. Документация. Сделано.
 4. Ansible: inventory, роли, раскладка конфигов из `services/`. Сделано.
-5. Бэкапы (в первую очередь данные vaultwarden), TLS, hardening, установка
-   Docker через Ansible.
+5. Бэкапы на сервере, TLS, защита сервера, Docker через Ansible. Сделано.
+   Не сделано: копия бэкапов вне сервера, в Google Диск.
 6. Логи - поднять сервис для сбора логов

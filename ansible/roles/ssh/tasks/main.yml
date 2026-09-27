@@ -1,0 +1,18 @@
+# Свои настройки кладём отдельным файлом в sshd_config.d. Директива Include
+# стоит в начале sshd_config, а в sshd побеждает первое найденное значение,
+# поэтому этот файл перекрывает всё, что ниже в основном конфиге.
+- name: Настройки sshd
+  ansible.builtin.copy:
+    dest: /etc/ssh/sshd_config.d/10-homelab.conf
+    content: |
+      # Управляется Ansible, роль ssh
+      PermitRootLogin no
+      PasswordAuthentication no
+      KbdInteractiveAuthentication no
+      PubkeyAuthentication yes
+      X11Forwarding no
+      MaxAuthTries 3
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Проверить и перечитать sshd
