@@ -18,13 +18,11 @@ find_air_allowed_user_ids: "{{ vault_find_air_allowed_user_ids }}"
 # конфиги берутся из services/apps/<name>.
 #   env_template  шаблон из services/apps/<name>/templates
 #   env_file      имя отрендеренного файла рядом с compose
-#   build         образ собирается из исходников, а не скачивается
 #   backup        какие базы SQLite копировать онлайн и что не класть в архив
 apps:
   - name: find-air
     env_template: find-air.env.j2
     env_file: find-air.env
-    build: true
     backup:
       sqlite: [findair.db]
       exclude: []

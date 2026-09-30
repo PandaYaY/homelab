@@ -2,13 +2,14 @@
 
 Telegram-бот, который следит за ценами на авиабилеты и присылает дайджест.
 Код живёт в отдельном репозитории
-[PandaYaY/FindAir](https://github.com/PandaYaY/FindAir), здесь только
+[nyaners01/FindAir](https://github.com/nyaners01/FindAir), здесь только
 развёртывание.
 
 ## Как устроен
 
-- Образ собирается на сервере прямо из ветки `master` репозитория на GitHub,
-  контекст сборки задан в `docker-compose.yaml`.
+- Готовый образ `ghcr.io/nyaners01/findair` собирает GitHub Actions при
+  релизе в репозитории бота (amd64 и arm64). Сервер только скачивает его,
+  версия закреплена тегом в `docker-compose.yaml` (сейчас `1.1.0`).
 - Портов не публикует: бот сам ходит в Telegram API и Travelpayouts.
   nginx ему не нужен.
 - База SQLite в `./data` рядом с compose. Путь к ней внутри контейнера
@@ -34,12 +35,14 @@ Telegram-бот, который следит за ценами на авиаби
 
 ## Обновление
 
+На новый релиз: поменять тег образа в `docker-compose.yaml`, затем
+
 ```sh
-ansible-playbook playbooks/apps.yml -e app_filter=find-air -e app_rebuild=true
+ansible-playbook playbooks/apps.yml -e app_filter=find-air
 ```
 
-Compose заново клонирует `master` и пересобирает образ. Без
-`app_rebuild=true` образ собирается, только если его ещё нет.
+Образа с новым тегом на сервере ещё нет, поэтому Compose скачает его сам.
+Обновления базового образа приходят вместе с новыми релизами.
 
 ## Бэкап
 

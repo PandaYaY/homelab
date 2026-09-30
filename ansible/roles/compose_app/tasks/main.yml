@@ -48,12 +48,13 @@
     mode: "0600"
 
 # Compose сам пересоздаёт контейнер, если изменились compose или env.
-# Образ из исходников собирается, только если его ещё нет, или по app_rebuild.
-# Готовый образ скачивается, только если его нет локально.
+# Образы только скачиваются, на сервере ничего не собирается.
+# Образ скачивается, только если его нет локально, поэтому версию
+# задаёт тег в compose.
 - name: "{{ app.name }}: запущен"
   community.docker.docker_compose_v2:
     project_src: "{{ app_dir }}"
     state: present
-    build: "{{ 'always' if app_rebuild | bool else 'policy' }}"
-    pull: "{{ 'never' if app.build | default(false) else 'missing' }}"
+    build: never
+    pull: missing
     recreate: "{{ 'always' if app_recreate | bool else 'auto' }}"

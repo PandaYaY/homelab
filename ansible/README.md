@@ -100,9 +100,8 @@ ansible-playbook playbooks/site.yml --check --diff
 ansible-playbook playbooks/site.yml --diff
 ```
 
-Одно приложение: `-e app_filter=vaultwarden`. Пересобрать образ из
-исходников: `-e app_rebuild=true`. Пересоздать контейнеры, например после
-смены настроек логов Docker: `-e app_recreate=true`.
+Одно приложение: `-e app_filter=vaultwarden`. Пересоздать контейнеры,
+например после смены настроек логов Docker: `-e app_recreate=true`.
 
 **Файрвол применяется со страховкой.** Перед загрузкой новых правил ставится
 таймер, который снимет их через 5 минут. После загрузки Ansible открывает
