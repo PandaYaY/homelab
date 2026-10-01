@@ -14,6 +14,10 @@ find_air_bot_token: "{{ vault_find_air_bot_token }}"
 find_air_tp_token: "{{ vault_find_air_tp_token }}"
 find_air_allowed_user_ids: "{{ vault_find_air_allowed_user_ids }}"
 
+# Уведомления в Telegram об ошибках служб, роль notify
+homelab_telegram_token: "{{ vault_homelab_telegram_token }}"
+nyaners_telegram_chat_id: "{{ vault_nyaners_telegram_chat_id }}"
+
 # Приложения в Docker Compose. Каждое живёт в {{ apps_base_dir }}/<name>,
 # конфиги берутся из services/apps/<name>.
 #   env_template  шаблон из services/apps/<name>/templates

@@ -13,3 +13,9 @@ vault_vaultwarden_admin_token: "$argon2id$v=19$..."
 vault_find_air_bot_token: "123456:ABC-DEF"
 vault_find_air_tp_token: "токен Travelpayouts"
 vault_find_air_allowed_user_ids: "111111111,222222222"
+
+# Уведомления об ошибках служб: токен бота от @BotFather и ID чата,
+# куда слать. Свой ID: @userinfobot. Боту нужно один раз написать /start,
+# иначе он не сможет прислать сообщение.
+vault_homelab_telegram_token: "123456:ABC-DEF"
+vault_nyaners_telegram_chat_id: "111111111"

@@ -1,5 +1,7 @@
 - name: Бэкапы
   hosts: homelab
   become: true
+  # notify раньше backup: служба бэкапа ссылается на homelab-notify@
   roles:
+    - notify
     - backup

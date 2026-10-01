@@ -1,0 +1,43 @@
+- name: curl для запросов к Telegram API
+  ansible.builtin.apt:
+    name: curl
+    state: present
+    update_cache: true
+    cache_valid_time: 86400
+
+- name: Каталог для настроек
+  ansible.builtin.file:
+    path: /etc/homelab
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+# diff: false, иначе --diff напечатает токен открытым текстом
+- name: Токен и чат Telegram
+  diff: false
+  ansible.builtin.template:
+    src: telegram.env.j2
+    dest: /etc/homelab/telegram.env
+    owner: root
+    group: root
+    mode: "0600"
+
+- name: Скрипт уведомления
+  ansible.builtin.template:
+    src: homelab-notify.sh.j2
+    dest: /usr/local/sbin/homelab-notify
+    owner: root
+    group: root
+    mode: "0750"
+
+# Шаблонный юнит: служба подключает его через
+# OnFailure=homelab-notify@%n.service
+- name: Служба уведомления
+  ansible.builtin.template:
+    src: homelab-notify@.service.j2
+    dest: /etc/systemd/system/homelab-notify@.service
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Перечитать systemd

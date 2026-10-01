@@ -1,0 +1,10 @@
+# Управляется Ansible, роль notify
+# Экземпляр называется по упавшему юниту: homelab-notify@homelab-backup.service.
+# %i, а не %I: %I превратил бы дефисы в имени юнита в слеши.
+[Unit]
+Description=Уведомление в Telegram об ошибке %i
+
+[Service]
+Type=oneshot
+EnvironmentFile=/etc/homelab/telegram.env
+ExecStart=/usr/local/sbin/homelab-notify %i

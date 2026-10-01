@@ -21,13 +21,14 @@ playbooks/
   tls.yml                       роль tls
   nginx.yml                     роль nginx
   apps.yml                      роль compose_app для каждого приложения из apps
-  backup.yml                    роль backup
+  backup.yml                    роли notify и backup
   hardening.yml                 роли ssh, services, firewall
 roles/
   docker/                       репозиторий и пакеты Docker, daemon.json
   tls/                          certbot, таймер продления, проверка сертификатов
   nginx/                        конфиги nginx, сайты, nginx -t и reload
   compose_app/                  /opt/<app>: compose, env из шаблона, up
+  notify/                       уведомления в Telegram об ошибках служб
   backup/                       скрипт, служба и таймер ночного бэкапа
   ssh/                          настройки sshd, sshd -t и reload
   services/                     остановка и маскировка лишних служб

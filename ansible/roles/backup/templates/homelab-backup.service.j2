@@ -2,6 +2,8 @@
 [Unit]
 Description=Бэкап данных приложений homelab
 After=docker.service
+# При ошибке прислать сообщение в Telegram, роль notify
+OnFailure=homelab-notify@%n.service
 
 [Service]
 Type=oneshot

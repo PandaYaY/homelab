@@ -7,14 +7,29 @@
 #   - остальные файлы копируются как есть, кроме исключённых каталогов;
 #   - всё упаковывается в {{ backup_dir }}/daily/<app>_<дата>.tar.gz.
 # По воскресеньям архив дополнительно кладётся в weekly/.
-# Старые архивы удаляются: daily старше {{ backup_keep_daily }} дней,
-# weekly старше {{ backup_keep_weekly }} недель.
+# У каждого приложения хранятся {{ backup_keep_daily }} последних daily и
+# {{ backup_keep_weekly }} последних weekly архивов. Старые удаляются только после
+# успешного нового архива, поэтому неудачные запуски ничего не стирают.
+# При ошибке systemd запускает homelab-notify@, и приходит сообщение в Telegram.
 set -euo pipefail
 umask 077
 
 DEST={{ backup_dir }}
 DATE=$(date +%F)
 mkdir -p "$DEST/daily" "$DEST/weekly"
+
+# Оставить в каталоге $1 только $3 последних архивов приложения $2.
+# Имена <app>_<ГГГГ-ММ-ДД>.tar.gz, glob сортирует их по дате.
+prune() {
+    local dir=$1 app=$2 keep=$3
+    local files=("$dir/${app}"_[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9].tar.gz)
+    [ -e "${files[0]}" ] || return 0
+    # Число файлов через $#, а не через решётку в фигурных скобках:
+    # для Jinja такая пара означает начало комментария
+    set -- "${files[@]}"
+    (( $# > keep )) || return 0
+    rm -f -- "${files[@]:0:$#-keep}"
+}
 
 # Внимание: функция вызывается как «backup_app ... || failed=1», а в таком
 # контексте bash отключает set -e внутри неё. Поэтому каждая команда здесь
@@ -72,6 +87,10 @@ backup_app() {
     if [ "$(date +%u)" = 7 ]; then
         cp "$out" "$DEST/weekly/" || { fail "не удалось скопировать архив в weekly"; return 1; }
     fi
+
+    prune "$DEST/daily" "$app" {{ backup_keep_daily }} || { fail "не удалось удалить старые daily"; return 1; }
+    prune "$DEST/weekly" "$app" {{ backup_keep_weekly }} || { fail "не удалось удалить старые weekly"; return 1; }
+
     echo "$app: $(du -h "$out" | cut -f1) $out"
 }
 
@@ -79,8 +98,5 @@ failed=0
 {% for app in apps if app.backup is defined %}
 backup_app {{ app.name | quote }} {{ app.backup.sqlite | join(' ') | quote }} {{ app.backup.exclude | join(' ') | quote }} || failed=1
 {% endfor %}
-
-find "$DEST/daily" -name '*.tar.gz' -mtime +{{ backup_keep_daily - 1 }} -delete
-find "$DEST/weekly" -name '*.tar.gz' -mtime +{{ backup_keep_weekly * 7 - 1 }} -delete
 
 exit $failed
