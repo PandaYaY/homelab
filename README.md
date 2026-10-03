@@ -125,4 +125,5 @@ ansible/              Ansible, см. ansible/README.md
 ## План
 
 Этапы, открытые задачи и отложенные решения в [docs/plan.md](docs/plan.md),
-результаты ревью в [docs/review-2026-09-27.md](docs/review-2026-09-27.md).
+результаты ревью в [docs/review-2026-09-27.md](docs/review-2026-09-27.md),
+учебный план развития инфраструктуры в [docs/roadmap.md](docs/roadmap.md).
